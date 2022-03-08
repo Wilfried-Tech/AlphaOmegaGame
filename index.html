@@ -26,20 +26,46 @@
     display: grid;
     grid-template: repeat(var(--row, 20), var(--size)) / repeat(var(--col, 20), var(--size));
     grid-gap: 0px;
+    background-color: #000;
   }
 
   .case {
-    border: 1px solid;
+    border: 0.1px solid #fff3;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 10px;
+  }
+  
+  #orders{
+    text-align: center;
+  }
+
+  textarea {
+    width: 100%;
+    height: 100px;
+    font-size: 17px;
+    padding: 3px;
+  }
+
+  button {
+    width: 90%;
+    margin: 7px auto;
+    padding: 6px;
+    font-weight: bold;
+    text-transform: capitalize;
+    font-size: 15px;
   }
 </style>
 
 <body>
   <div id="board"></div>
+  <div id="orders">
+    <textarea cols="30" rows="10"></textarea>
+    <button>ordonner</button>
+  </div>
 </body>
 <script src="setup.js"></script>
-<script src="main.js" ></script>
+<script src="main.js"></script>
 
 </html>

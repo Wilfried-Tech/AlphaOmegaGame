@@ -3,8 +3,9 @@ function $(arg) {
 }
 
 function initBattleBoard(row, col, table) {
-  var map = new Array(row).fill(new Array(col));
+  var map = [];
   for (var _row = 0; _row < row; _row++) {
+    map[_row] = [];
     for (var _col = 0; _col < col; _col++) {
       (function() {
         var _case = document.createElement('div');
@@ -25,46 +26,67 @@ function parseConfigFile(name) {
   xhr.send();
   var obj = JSON.parse(xhr.responseText);
   var config = { sizes: obj.map }
-  var volves = obj.werevolves.map(line => {
-    line = line.trim().split(" ");
+  var volves = obj.werevolves.map((line, i) => {
+    line = line.trim().split(" ") //.map(x=>x.trim());
     return {
-      row: line[1] - 1,
-      col: line[2] - 1,
+      row: Number(line[1]) - 1,
+      col: Number(line[2]) - 1,
       type: line[3],
-      team: line[0],
+      team: Number(line[0]),
       energie: 100,
       isVolve: true
     }
   })
-  var foods = obj.foods.map(line => {
+  var foods = obj.foods.map((line, i) => {
     line = line.trim().split(" ");
     return {
-      row: line[0] - 1,
-      col: line[1] - 1,
+      row: Number(line[0]) - 1,
+      col: Number(line[1]) - 1,
       type: line[2],
-      energie: line[3],
+      energie: Number(line[3]),
       isVolve: false
     }
   })
-  config.Map = new Array(obj.map[0]).fill(new Array(obj.map[1]).fill({ type: 'void' }));
-
+  //config.map = new Array(obj.map[0]).fill(new Array(obj.map[1]).fill({ type: 'void' }));
+  config.map = [];
+  for (var r = 0; r < obj.map[0]; r++) {
+    config.map.push([]);
+    for (var c = 0; c < obj.map[1]; c++) {
+      config.map[r].push({ type: 'void' });
+    }
+  }
   for (var wolf of volves) {
-    config.Map[wolf.row][wolf.col] = wolf;
+    config.map[wolf.row][wolf.col] = wolf;
   }
   for (var food of foods) {
-    config.Map[food.row][food.col] = food;
+    config.map[food.row][food.col] = food;
   }
   return config
 }
 
-function drawGame(MapSprites, MapBoard) {
-  //alert(JSON.stringify(MapSprites))
+function sleep(sec) {
+  sec *= 1000;
+  return new Promise(r => setTimeout(r, sec))
+}
+
+function drawGame(MapSprites, BoardMap) {
+  var pics = {
+    normal: '🦊',
+    omega: '🐶',
+    alpha: '🐺',
+    apple: '🍏',
+    berries: '🍒',
+    rabbits: '🐇',
+    deer: '🦌',
+    mice: '🍇',
+    void: ''
+  }
   for (var row = 0; row < MapSprites.sizes[0]; row++) {
     for (var col = 0; col < MapSprites.sizes[1]; col++) {
-      (() => {
-        MapBoard[row][col].style = 'background: red;'
-        MapBoard[row][col].innerText = row //MapSprites.Map[row][col]//.type[0].toUppercase();
-      })()
+      (function(row, col) {
+        var sprite = MapSprites.map[row][col];
+        BoardMap[row][col].innerHTML = pics[sprite.type];
+      })(row, col)
     }
   }
 }
