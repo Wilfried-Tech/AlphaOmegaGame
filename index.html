@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AlphaOmegaGame</title>
+</head>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    outline: none;
+  }
+
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+  }
+
+  #board {
+    --size: calc(100vw / var(--col, 20));
+    width: 100%;
+    display: grid;
+    grid-template: repeat(var(--row, 20), var(--size)) / repeat(var(--col, 20), var(--size));
+    grid-gap: 0px;
+  }
+
+  .case {
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+
+<body>
+  <div id="board"></div>
+</body>
+<script src="setup.js"></script>
+<script src="main.js" ></script>
+
+</html>
