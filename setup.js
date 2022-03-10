@@ -103,7 +103,6 @@ function parseOrders(orders) {
     combat: [],
     move: []
   }
-
   ordersArr.forEach(order => {
     order = order.trim();
     if (order == '') return;
@@ -111,7 +110,7 @@ function parseOrders(orders) {
       /(\d+)-(\d+)/.test(order);
       var { $1, $2 } = RegExp;
       instructions.pacify.push({ row: $1, col: $2 });
-    } else if (orders.indexOf(':*') != -1) {
+    } else if (order.indexOf(':*') != -1) {
       /(\d+)-(\d+):\*(\d+)-(\d+)/.test(order);
       var { $1, $2, $3, $4 } = RegExp;
       instructions.combat.push({
@@ -124,7 +123,7 @@ function parseOrders(orders) {
           col: $4
         }
       })
-    } else if (orders.indexOf(':<') != -1) {
+    } else if (order.indexOf(':<') != -1) {
       /(\d+)-(\d+):\<(\d+)-(\d+)/.test(order);
       var { $1, $2, $3, $4 } = RegExp;
       instructions.nourrir.push({
@@ -137,7 +136,7 @@ function parseOrders(orders) {
           col: $4
         }
       })
-    } else if (orders.indexOf(':@') != -1) {
+    } else if (order.indexOf(':@') != -1) {
       /(\d+)-(\d+):\@(\d+)-(\d+)/.test(order);
       var { $1, $2, $3, $4 } = RegExp;
       instructions.move.push({
@@ -152,6 +151,7 @@ function parseOrders(orders) {
       })
     }
   })
+  console.log(instructions);
   return instructions;
 }
 
@@ -174,13 +174,36 @@ function getSpriteInRadius($row, $col, r, map) {
   return sprites;
 }
 
+function getVolves(map) {
+  var sprites = [];
+  for (var row = 1; row <= map.length; row++) {
+    for (var col = 1; col <= map[0].length; col++) {
+      var sprite = map[row][col];
+      if (sprite == null) continue;
+      if (sprite.isVolve) {
+        sprites.push(sprite)
+      }
+    }
+  }
+  return sprites;
+}
+
+function check(wolf, team) {
+  if (team && wolf.team != team)
+    return false
+  if (wolf.energie <= 0 || wolf.pasified != 0) {
+    return false
+  }
+  return true;
+}
+
 async function gameLoop(orders, Sprites, Map, team) {
   this.disabled = true;
   orders = parseOrders(orders);
-
+  console.log(team);
   // depacify previous volves
-
-  getSpriteInRadius(Map.length - 1, Map[0].length - 1, (Map.length - 1) / 2, Sprites).forEach(sprite => {
+  team = 1
+  getVolves(Sprites).forEach(sprite => {
     sprite.pasified = (sprites.pasified <= 0) ? 0 : sprite.pasified - 1
   })
 
@@ -188,7 +211,7 @@ async function gameLoop(orders, Sprites, Map, team) {
   if (orders.pacify.length != 0) {
     var { row, col } = orders.pacify[0];
     if (Sprites[row][col] != null) {
-      if (Sprites[row][col].type == 'omega' && Sprites[row][col].energie > 0) {
+      if (Sprites[row][col].type == 'omega' && Sprites[row][col].energie > 40 && check(Sprites[row][col], team)) {
         var sprites = getSpriteInRadius(row, col, 6, Sprites);
         sprites.forEach(sprite => {
           sprite.pasified++;
@@ -212,12 +235,38 @@ async function gameLoop(orders, Sprites, Map, team) {
       var sprite2 = Sprites[conf.to.row][conf.to.col];
       if (sprite1 != null && sprite2 != null) {
         if (sprite1.isVolve && !sprite2.isVolve) {
-          while (sprite1.energie < 100 && sprite2.energie != 0) {
-            sprite1.energie++;
-            sprite2.energie--;
+          if (distance(sprite1.row, sprite1.col, conf.to.row, conf.to.col) <= 1 && check(sprite1, team)) {
+            while (sprite1.energie < 100 && sprite2.energie != 0) {
+              sprite1.energie++;
+              sprite2.energie--;
+            }
+            if (sprite2.energie == 0) {
+              Sprites[sprite2.row][sprite2.col] = null;
+            }
           }
-          if (sprite2.energie == 0) {
-            Sprites[sprite2.row][sprite2.col] = null;
+        }
+      }
+    })
+  }
+
+  //await sleep(3);
+
+  //alert('battle')
+
+  if (orders.combat.length != 0) {
+    orders.combat.forEach(async conf => {
+      console.log(conf);
+      var sprite1 = Sprites[conf.from.row][conf.from.col];
+      var sprite2 = Sprites[conf.to.row][conf.to.col];
+      if (sprite1 != null && sprite2 != null) {
+        if (sprite1.isVolve && sprite2.isVolve) {
+          if (distance(sprite1.row, sprite1.col, conf.to.row, conf.to.col) == 1 && check(sprite1, null)) {
+            sprite2.energie -= Math.round(sprite2.energie / 10);
+            drawGame(Sprites, BoardMap)
+            await sleep(0.7);
+            if (sprite2.energie <= 0) {
+              Sprites[conf.to.row][conf.to.col] = null
+            }
           }
         }
       }
@@ -225,25 +274,19 @@ async function gameLoop(orders, Sprites, Map, team) {
   }
   //await sleep(3);
 
-  //alert('battle')
-  //
-  //await sleep(3)
-
   //alert('move')
   if (orders.move.length != 0) {
     orders.move.forEach(async conf => {
       var sprite1 = Sprites[conf.from.row][conf.from.col];
       var sprite2 = Sprites[conf.to.row][conf.to.col];
-      if (sprite1 != null && sprite2 == null) {
-        if (sprite1.isVolve) {
-          if (distance(sprite1.row, sprite1.col, conf.to.row, conf.to.col) == 1) {
-            sprite1.row = conf.to.row;
-            sprite1.col = conf.to.col
-            Sprites[conf.to.row][conf.to.col] = sprite1;
-            Sprites[conf.from.row][conf.from.col] = null;
-            drawGame(Sprites, BoardMap)
-            await sleep(0.7);
-          }
+      if (sprite1 != null && (sprite2 == null /*||!sprite2.isVolve*/ )) {
+        if (sprite1.isVolve && distance(sprite1.row, sprite1.col, conf.to.row, conf.to.col) <= 1 && check(sprite1, team)) {
+          sprite1.row = conf.to.row;
+          sprite1.col = conf.to.col
+          Sprites[conf.to.row][conf.to.col] = sprite1;
+          Sprites[conf.from.row][conf.from.col] = null;
+          drawGame(Sprites, BoardMap)
+          await sleep(0.7);
         }
       }
     })
