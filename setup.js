@@ -236,13 +236,13 @@ async function gameLoop(orders, Sprites, Map, team) {
       var sprite2 = Sprites[conf.to.row][conf.to.col];
       if (sprite1 != null && sprite2 == null) {
         if (sprite1.isVolve) {
-          if(distance(sprite1.row,sprite1.col,conf.to.row,conf.to.col)==1){
-          sprite1.row = conf.to.row;
-          sprite1.col = conf.to.col
-          Sprites[conf.to.row][conf.to.col] = sprite1;
-          Sprites[conf.from.row][conf.from.col] = null;
-          drawGame(Sprites, BoardMap)
-          await sleep(0.7);
+          if (distance(sprite1.row, sprite1.col, conf.to.row, conf.to.col) == 1) {
+            sprite1.row = conf.to.row;
+            sprite1.col = conf.to.col
+            Sprites[conf.to.row][conf.to.col] = sprite1;
+            Sprites[conf.from.row][conf.from.col] = null;
+            drawGame(Sprites, BoardMap)
+            await sleep(0.7);
           }
         }
       }
