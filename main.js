@@ -4,9 +4,9 @@ var input = $('#orders textarea ');
 var team = 2;
 var BoardSprite = parseConfigFile('./config.json')
 
-var BoardMap = initBattleBoard(BoardSprite.sizes[0], BoardSprite.sizes[1], table);
+var BoardMap = initBattleBoard(BoardSprite.length, BoardSprite[1].length, table);
 
-//console.log(BoardSprite.map[0][0])
+//console.log(BoardSprite)
 
 drawGame(BoardSprite, BoardMap);
 

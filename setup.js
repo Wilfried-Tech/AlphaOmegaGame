@@ -4,9 +4,9 @@ function $(arg) {
 
 function initBattleBoard(row, col, table) {
   var map = [];
-  for (var _row = 0; _row <= row; _row++) {
+  for (var _row = 0; _row < row; _row++) {
     map[_row] = [];
-    for (var _col = 0; _col <= col; _col++) {
+    for (var _col = 0; _col < col; _col++) {
       (function() {
         var _case = document.createElement('div');
         map[_row][_col] = (!_row || !col) ? null : _case;
@@ -17,8 +17,8 @@ function initBattleBoard(row, col, table) {
       })()
     }
   }
-  table.style.setProperty('--row', row + 1);
-  table.style.setProperty('--col', col + 1);
+  table.style.setProperty('--row', row);
+  table.style.setProperty('--col', col);
   return map;
 }
 
@@ -27,7 +27,7 @@ function parseConfigFile(name) {
   xhr.open('GET', name, false);
   xhr.send();
   var obj = JSON.parse(xhr.responseText);
-  var config = { sizes: obj.map }
+  var config = null
   var volves = obj.werevolves.map((line, i) => {
     line = line.trim().split(" ") //.map(x=>x.trim());
     return {
@@ -51,18 +51,18 @@ function parseConfigFile(name) {
     }
   })
   //config.map = new Array(obj.map[0]).fill(new Array(obj.map[1]).fill({ type: 'void' }));
-  config.map = [[]];
+  config = [[]];
   for (var r = 1; r <= obj.map[0]; r++) {
-    config.map.push([]);
+    config.push([]);
     for (var c = 0; c <= obj.map[1]; c++) {
-      config.map[r].push((!c) ? null : { type: 'void' });
+      config[r].push(null);
     }
   }
   for (var wolf of volves) {
-    config.map[wolf.row][wolf.col] = wolf;
+    config[wolf.row][wolf.col] = wolf;
   }
   for (var food of foods) {
-    config.map[food.row][food.col] = food;
+    config[food.row][food.col] = food;
   }
   return config
 }
@@ -81,14 +81,14 @@ function drawGame(MapSprites, BoardMap) {
     berries: '🍒',
     rabbits: '🐇',
     deer: '🦌',
-    mice: '🍇',
-    void: ''
+    mice: '🍇'
   }
-  for (var row = 1; row <= MapSprites.sizes[0]; row++) {
-    for (var col = 1; col <= MapSprites.sizes[1]; col++) {
+
+  for (var row = 1; row < MapSprites.length; row++) {
+    for (var col = 1; col < MapSprites[1].length; col++) {
       (function(row, col) {
-        var sprite = MapSprites.map[row][col];
-        BoardMap[row][col].innerHTML = pics[sprite.type];
+        var sprite = MapSprites[row][col];
+        BoardMap[row][col].innerHTML = (sprite == null) ? '' : pics[sprite.type];
       })(row, col)
     }
   }
@@ -165,6 +165,7 @@ function getSpriteInRadius($row, $col, r, map) {
     for (var col = 1; col <= map[0].length; col++) {
       if (row == $row && col == $col) continue;
       var sprite = map[row][col];
+      if (sprite == null) continue;
       if (sprite.isVolve && distance($row, $col, row, col) <= r) {
         sprites.push(sprite)
       }
@@ -183,29 +184,70 @@ async function gameLoop(orders, Sprites, Map, team) {
     sprite.pasified = (sprites.pasified <= 0) ? 0 : sprite.pasified - 1
   })
 
-  alert('pacify');
+  //alert('pacify');
   if (orders.pacify.length != 0) {
     var { row, col } = orders.pacify[0];
-    if (Sprites.map[row][col].type == 'omega') {
-      var sprites = getSpriteInRadius(row, col, 6, Sprites);
-      sprites.forEach(sprite => {
-        sprite.pasified++;
-      })
-      console.log(team + ' pacify');
+    if (Sprites[row][col] != null) {
+      if (Sprites[row][col].type == 'omega' && Sprites[row][col].energie > 0) {
+        var sprites = getSpriteInRadius(row, col, 6, Sprites);
+        sprites.forEach(sprite => {
+          sprite.pasified++;
+        })
+        Sprites[row][col].energie -= 40;
+        console.log(team + ' pacify');
+      }
     }
   }
   drawGame(Sprites, Map);
-  await sleep(3);
+  //await sleep(3);
 
-  alert('bonus mode');
+  //alert('bonus mode');
   // not implémented
-  await sleep(3)
+  //await sleep(3)
 
-  alert('nutrition');
-  if (orders.nourrir.length != 0){
-    
+  //alert('nutrition');
+  if (orders.nourrir.length != 0) {
+    orders.nourrir.forEach(conf => {
+      var sprite1 = Sprites[conf.from.row][conf.from.col];
+      var sprite2 = Sprites[conf.to.row][conf.to.col];
+      if (sprite1 != null && sprite2 != null) {
+        if (sprite1.isVolve && !sprite2.isVolve) {
+          while (sprite1.energie < 100 && sprite2.energie != 0) {
+            sprite1.energie++;
+            sprite2.energie--;
+          }
+          if (sprite2.energie == 0) {
+            Sprites[sprite2.row][sprite2.col] = null;
+          }
+        }
+      }
+    })
   }
+  //await sleep(3);
 
+  //alert('battle')
+  //
+  //await sleep(3)
+
+  //alert('move')
+  if (orders.move.length != 0) {
+    orders.move.forEach(async conf => {
+      var sprite1 = Sprites[conf.from.row][conf.from.col];
+      var sprite2 = Sprites[conf.to.row][conf.to.col];
+      if (sprite1 != null && sprite2 == null) {
+        if (sprite1.isVolve) {
+          if(distance(sprite1.row,sprite1.col,conf.to.row,conf.to.col)==1){
+          sprite1.row = conf.to.row;
+          sprite1.col = conf.to.col
+          Sprites[conf.to.row][conf.to.col] = sprite1;
+          Sprites[conf.from.row][conf.from.col] = null;
+          drawGame(Sprites, BoardMap)
+          await sleep(0.7);
+          }
+        }
+      }
+    })
+  }
 
   this.disabled = false;
 }
