@@ -54,6 +54,8 @@ class Wolf:
       self.energie += 1
       food.energie += 1
   
+  def __str__(self):
+    return '🐺'
 
 
 __all__ = ['Wolf']

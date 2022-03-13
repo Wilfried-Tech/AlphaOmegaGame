@@ -22,7 +22,19 @@ class Food:
   @property
   def finished(self): 
     return True if self.energie<=0 else False
-    
+  
+  def __str__(self): 
+    name = self.name
+    if name == 'deer': 
+      return '🦌'
+    elif name == 'mice': 
+      return '🐁'
+    elif name == 'rabbits': 
+      return '🐇'
+    elif name == 'apple':
+      return '🍏'
+    else:
+      return '🍇'
 
 __all__ = ['Food']
 

@@ -20,18 +20,16 @@ class Game:
       lines = conf.readlines()
       self.__size = [int(x) for x in lines[1].split(' ')]
       for line in lines[2:]:
-        arr = line.split(' ')
+        arr = line.strip().split(' ')
         if arr[-1].isalpha():
-          print('al')
           [team,row,col,name] = arr
           self.__volves.append(Wolf(int(row),int(col),name,int(team)))
         elif arr[-1].isdigit():
-          print('di')
           [row,col,name,qte] = arr
           self.__foods.append(Food(int(row),int(col),name,int(qte)))
     self.__makeMap()
     print(self.__volves)
-    self.__loading()
+   # self.__loading()
   
   def __loading(self):
     print('\n loading game . . .')
@@ -72,13 +70,29 @@ class Game:
     for row in range(0,self.__size[0]+1):
       for col in range(0,self.__size[1]+1):
         item = self.__map[row][col]
-        print(item)
         if item != None :
           if type(item) == int:
-            print(item,end=' ')
+            item = item if item > 9 else ' '+str(item)
+            print(item,end='')
           else:
-            print("*",end=' ')
+            print(item,end='')
         else:
-          print(" ",end=' ')
+          print("  ",end='')
       print('')
+  
+  def __parseInstruction(self, orders):
+    orders = orders.strip().split(' ')
+    parsedOrders = {
+      'pacify': [],
+      'attack': [],
+      'bonus': [],
+      'nourish': [],
+      'move': []
+    }
+    
+    for order in orders :
+      
+    
+    
+    
 
