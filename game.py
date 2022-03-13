@@ -29,7 +29,7 @@ class Game:
           self.__foods.append(Food(int(row),int(col),name,int(qte)))
     self.__makeMap()
     print(self.__volves)
-   # self.__loading()
+    self.__loading()
   
   def __loading(self):
     print('\n loading game . . .')
