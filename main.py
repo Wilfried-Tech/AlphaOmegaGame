@@ -11,6 +11,9 @@ def PvP():
   game = Game()
   game.loadConfigFile('config.ano')
   game.draw()
+  while not game.end() or game.turnCount < 200: 
+    game.waitOrders(team)
+  
 
 
 print("\n","BIENVENUE DANS LE JEU ALPHA OMEGA !".center(47),"\n\n")

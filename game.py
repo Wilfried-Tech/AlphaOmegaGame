@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os
+import os, re # , math
 from color import Color
 from wolf import Wolf
 from food import Food
@@ -14,6 +14,14 @@ class Game:
     self.__volves = []
     self.__foods = []
     self.__pacified_volves = []
+    self.__nb_of_turn = 0
+  
+  @property
+  def turnCount(self): 
+    return self.__nb_of_turn
+  @property
+  def end(self): 
+    return self.__getAlpha(1).energie <= 0 or self.__getAlpha(2) <= 0 
   
   def loadConfigFile(self,file):
     with open(file,'r') as conf:
@@ -28,7 +36,6 @@ class Game:
           [row,col,name,qte] = arr
           self.__foods.append(Food(int(row),int(col),name,int(qte)))
     self.__makeMap()
-    print(self.__volves)
     self.__loading()
   
   def __loading(self):
@@ -44,7 +51,7 @@ class Game:
         else:
           print(Color.bg(" ",(100,100,100)),end='')
         i += 1
-      print("]\r",end='')
+      print("] \r",end='')
       progress += 1
       os.system("sleep $((10/40))")
     os.system("sleep 2;clear")
@@ -85,14 +92,42 @@ class Game:
     parsedOrders = {
       'pacify': [],
       'attack': [],
-      'bonus': [],
       'nourish': [],
       'move': []
     }
+    MOVE,ATTACK,NOURISH,PACIFY = 0,1,2,3
     
     for order in orders :
-      
+      obj = {}
+      for action,pattern in list([r"(\d+)-(\d+)\:\@(\d+)-(\d+)",r"(\d+)-(\d+)\:\*(\d+)-(\d+)",r"(\d+)-(\d+)\:\<(\d+)-(\d+)",r"(\d+)-(\d+)\:pacify"]): 
+        match = re.match(pattern,order)
+        if match and action == MOVE: 
+          obj['from'] = {'row':match.group(1),'col':match.group(2)}
+          obj['to'] = {'row':match.group(3),'col':match.group(4)}
+          parsedOrders['move'].append(obj)
+          break
+        if match and action == ATTACK: 
+          obj['from'] = {'row':match.group(1),'col':match.group(2)}
+          obj['to'] = {'row':match.group(3),'col':match.group(4)}
+          parsedOrders['attack'].append(obj)
+          break
+        if match and action == NOURISH: 
+          obj['from'] = {'row':match.group(1),'col':match.group(2)}
+          obj['to'] = {'row':match.group(3),'col':match.group(4)}
+          parsedOrders['nourish'].append(obj)
+          break
+        if match and action == PACIFY: 
+          obj['from'] = {'row':match.group(1),'col':match.group(2)}
+          parsedOrders['pacify'].append(obj)
+          break
     
+    return parsedOrders
     
-    
-
+  def __getAlpha(self,team): 
+    return list(filter(lambda wolf: wolf.name == 'alpha' and wolf.team == team,self.__volves))[0]
+  
+  def __distance(self,frow,fcol,trow,tcol):
+    return max(abs(trow - frow),abs(tcol - fcol))
+  
+  def __getVolvesInRadius(self,row,col,radius):
+    return []
