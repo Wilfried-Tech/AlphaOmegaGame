@@ -129,5 +129,16 @@ class Game:
   def __distance(self,frow,fcol,trow,tcol):
     return max(abs(trow - frow),abs(tcol - fcol))
   
-  def __getVolvesInRadius(self,row,col,radius):
-    return []
+  def __getVolvesInRadius(self,_row,_col,radius):
+    volves = []
+    for row in range(1, self.__size[0]+1):
+      for col in range(1, self.__size[1]+1): 
+        if type(self.__map[row][col])=='wolf': 
+          if self.__distance(_row,_col,row,col) <= radius: 
+            volves.append(self.__map[row][col])
+    return volves
+  
+  def execute(self,orders): 
+    orders = self.__parseInstruction(orders)
+    
+    
